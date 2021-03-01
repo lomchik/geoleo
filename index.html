@@ -1,0 +1,53 @@
+<html>
+  <head></head>
+  <body>
+    <button onclick="start()">start</button>
+    <button onclick="stop()">stop</button>
+    <button onclick="reset()">reset</button>
+    <button onclick="save()">save</button>
+    <button onclick="saveJson()">save json</button>
+    <pre id="log"></pre>
+    <script>
+      let logs =[]
+      let interval = 0;
+      const coordKeys = Object.keys(GeolocationCoordinates.prototype);
+      function start() {
+        interval = setInterval(() => {
+          navigator.geolocation.getCurrentPosition((data) => {
+            const coordsCopy = {};
+            coordKeys.forEach(k => {
+              coordsCopy[k] = data.coords[k];
+            })
+            rawData = {
+              timestamp: data.timestamp,
+              coords: coordsCopy
+            };
+            console.log(rawData);
+            logs.push(rawData)
+            document.getElementById('log').innerHTML += `${coordsCopy.latitude}, ${coordsCopy.longitude}\r\n`
+          }, alert)
+        }, 1000)
+      }
+      function stop() {
+        clearInterval(interval);
+      }
+      function reset() {
+        document.getElementById('log').innerHTML = ""
+        logs = []
+      }
+      function save() {
+        download(document.getElementById('log').innerHTML, 'track.txt', 'text/plain');
+      }
+      function saveJson() {
+        download(JSON.stringify(logs), 'track.json', 'text/plain');
+      }
+      function download(content, fileName, contentType) {
+        var a = document.createElement("a");
+        var file = new Blob([content], {type: contentType});
+        a.href = URL.createObjectURL(file);
+        a.download = fileName;
+        a.click();
+      }
+    </script>
+  </body>
+</html>
