@@ -6,7 +6,11 @@
     <button onclick="reset()">reset</button>
     <button onclick="save()">save</button>
     <button onclick="saveJson()">save json</button>
+    <button onclick="display(logs)">display</button>
+    <div>Distance: <span id="distance"></span></div>
+    <div id="map" style="width: 800px; height: 500px">
     <pre id="log"></pre>
+    </div>
     <script>
       let logs =[]
       let interval = 0;
@@ -39,7 +43,7 @@
         download(document.getElementById('log').innerHTML, 'track.txt', 'text/plain');
       }
       function saveJson() {
-        download(JSON.stringify(logs), 'track.json', 'text/plain');
+        download(JSON.stringify(logs), 'track.json', 'text/json');
       }
       function download(content, fileName, contentType) {
         var a = document.createElement("a");
@@ -49,5 +53,53 @@
         a.click();
       }
     </script>
+
+  <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD7M627NkIG-_dGl1Obcjv29juDaDtkdto&sensor=false&libraries=" async></script>
+  <script type="text/javascript">
+      function display(log) {
+        const coords = log.map((l,i) => {
+          return {lat: l.coords.latitude, lng: l.coords.longitude};
+        })
+        var map = initMap(coords[0]);
+        const path = new google.maps.Polyline({
+          path: coords,
+          geodesic: true,
+          strokeColor: "#FF0000",
+          strokeOpacity: 1.0,
+          strokeWeight: 2,
+        });
+
+        path.setMap(map);
+        document.getElementById('distance').innerHTML = calculateDistance(coords);
+      }
+
+      function initMap(center) {
+        var myOptions = {
+            zoom: 18,
+            center,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        return new google.maps.Map(document.getElementById("map"), myOptions);
+      }
+
+      function haversine_distance(coord1, coord2) {
+        var R = 6371; // Radius of the Earth in km
+        var rlat1 = coord1.lat * (Math.PI/180); // Convert degrees to radians
+        var rlat2 = coord2.lat * (Math.PI/180); // Convert degrees to radians
+        var difflat = rlat2-rlat1; // Radian difference (latitudes)
+        var difflon = (coord1.lng-coord2.lng) * (Math.PI/180); // Radian difference (longitudes)
+
+        var d = 2 * R * Math.asin(Math.sqrt(Math.sin(difflat/2)*Math.sin(difflat/2)+Math.cos(rlat1)*Math.cos(rlat2)*Math.sin(difflon/2)*Math.sin(difflon/2)));
+        return d;
+      }
+
+      function calculateDistance(coords) {
+        let dist = 0;
+        for (let i=0; i < coords.length -1; i++) {
+          dist += haversine_distance(coords[i], coords[i+1]);
+        }
+        return dist;
+      }
+  </script>
   </body>
 </html>
